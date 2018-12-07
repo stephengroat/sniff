@@ -7,19 +7,22 @@ import random
 import datetime
 import threading
 import time
+from collections import Counter
 
 
 def alert():
-    print("Hello")
+    print(Counter(list(alert.values())))
 
 
 cache = TTLCache(maxsize=1024, ttl=10)
 alert = TTLCache(maxsize=1024, ttl=21, cb=alert)
+alerted = False
+
 
 def summary():
     next_call = time.time()
     while True:
-        print(cache.values)
+        print(Counter(list(cache.values())))
         next_call = next_call+10
         time.sleep(next_call - time.time())
 
@@ -30,11 +33,9 @@ def pkt(pkt):
         path_re = r'^((\/\w+)\/?)'
         matches = re.match(path_re, pkt['HTTPRequest'].Path.decode("utf-8"))
         if matches:
-            # print(host + matches[2])
             cache[random.randint(0, cache.maxsize)] = host + matches[2]
             alert[random.randint(0, alert.maxsize)] = host + matches[2]
         else:
-            # print(host)
             cache[random.randint(0, cache.maxsize)] = host
             alert[random.randint(0, alert.maxsize)] = host
 
