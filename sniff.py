@@ -2,21 +2,24 @@
 import re
 import scapy.all as scapy
 import scapy_http.http
-from cachetools import cached, TTLCache
+from cachetools import TTLCache
 import random
 import datetime
 import threading
 import time
 
-cache = TTLCache(maxsize=1024, ttl=10)
-alert = TTLCache(maxsize=1024, ttl=60*2)
 
+def alert():
+    print("Hello")
+
+
+cache = TTLCache(maxsize=1024, ttl=10)
+alert = TTLCache(maxsize=1024, ttl=21, cb=alert)
 
 def summary():
     next_call = time.time()
     while True:
         print(cache.values)
-        print(datetime.datetime.now())
         next_call = next_call+10
         time.sleep(next_call - time.time())
 
