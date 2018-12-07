@@ -2,4 +2,4 @@
 
 ## TODO
 
-- [] figure out callback for alert logic
+- [ ] figure out callback for alert logic
