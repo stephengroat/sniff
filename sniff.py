@@ -1,12 +1,16 @@
 #!/usr/bin/python
+# regex
 import re
+# packet sniffing and decoding
 import scapy.all as scapy
 import scapy_http.http
+# cache
 from cachetools import TTLCache
 import random
-import datetime
+# threading
 import threading
 import time
+# Counting caches
 from collections import Counter
 
 alerted = False
@@ -48,8 +52,10 @@ def pkt(pkt):
 
 
 if __name__ == '__main__':
+    # start summary thread
     timerThread = threading.Thread(target=summary)
     timerThread.daemon = True
     timerThread.start()
+    # only look at tcp based http traffic to and from port 80 for speed
     filter = "(tcp and dst port 80) or (tcp and src port 80)"
     scapy.sniff(filter=filter, prn=pkt)
