@@ -9,14 +9,17 @@ import threading
 import time
 from collections import Counter
 
+alerted = False
 
 def alert():
-    print(Counter(list(alert.values())))
+    global alerted
+    if alerted and list(alert.values()).count('pagead2.googlesyndication.com/pagead') <= 2:
+        print('ALERT OFF')
+        alerted = False
 
 
 cache = TTLCache(maxsize=1024, ttl=10)
 alert = TTLCache(maxsize=1024, ttl=21, cb=alert)
-alerted = False
 
 
 def summary():
@@ -28,6 +31,7 @@ def summary():
 
 
 def pkt(pkt):
+    global alerted
     if scapy_http.http.HTTPRequest in pkt:
         host = pkt['HTTPRequest'].Host.decode("utf-8")
         path_re = r'^((\/\w+)\/?)'
@@ -38,6 +42,9 @@ def pkt(pkt):
         else:
             cache[random.randint(0, cache.maxsize)] = host
             alert[random.randint(0, alert.maxsize)] = host
+        if not alerted and list(alert.values()).count('pagead2.googlesyndication.com/pagead') > 2:
+            print('ALERT ON')
+            alerted = True
 
 
 if __name__ == '__main__':
