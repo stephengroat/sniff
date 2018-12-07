@@ -20,7 +20,7 @@ class Sniff:
     def alert(self):
         if self.__alerted:
             if list(self.alert.values()).count(self.alertSection) <= 2:
-                PRINT('ALERT OFF')
+                print('ALERT OFF')
                 self.__alerted = False
 
     # loop to print summary every 10 seconds
