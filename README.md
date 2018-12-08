@@ -1,4 +1,5 @@
 # sniff
+[![Build Status](https://travis-ci.com/stephengroat/sniff.svg?branch=master)](https://travis-ci.com/stephengroat/sniff)
 
 ## TODO
 

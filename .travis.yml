@@ -1,4 +1,4 @@
 language: python
 python: "3.5"
 install: pip install -r requirements.txt
-script: pytest test_sniff.py
+script: py.test --cov=sniff test_sniff.py

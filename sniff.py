@@ -13,6 +13,7 @@ import time
 import datetime
 # Counting caches
 from collections import Counter
+import argparse
 
 
 class Sniff:
@@ -46,7 +47,7 @@ class Sniff:
             pathre = r'^((\/\w+)\/?)'
             matches = re.match(pathre, pkt['HTTPRequest'].Path.decode("utf-8"))
             if matches:
-                host += matches[2]
+                host += matches.group(2)
 
             # add entries to both caches
             self.cache[random.randint(0, self.cache.maxsize)] = host
@@ -57,7 +58,6 @@ class Sniff:
                 if list(self.alert.values()).count(self.alertSection) > 2:
                     # if not alerted, activate
                     if not self.__alerted:
-                        print(datetime.datetime.now())
                         print('ALERT ON')
                         self.__alerted = True
                         self.e = threading.Event()
@@ -86,5 +86,8 @@ class Sniff:
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Sniff HTTP traffic for sections and alert')
+    parser.add_argument('', metavar='N', type=int, nargs='+',
+                        help='an integer for the accumulator')
     sniffer = Sniff(alert='www.bbc.com', attl=15)
     sniffer()
