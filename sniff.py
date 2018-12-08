@@ -3,7 +3,7 @@
 import re
 # packet sniffing and decoding
 import scapy.all as scapy
-import scapy_http.http
+import scapy_http.http as shttp
 # cache
 from cachetools import TTLCache
 import random
@@ -20,8 +20,9 @@ class Sniff:
     # check if alert still valid and, if not, turn off
     def alert(self):
         if self.__alerted:
-            if list(self.alert.values()).count(self.alertSection) <= 2:
-                print('ALERT OFF')
+            hits = list(self.alert.values()).count(self.alertSection)
+            if hits <= self.alertSize:
+                print('High traffic resolved an alert - hits = '+ str(hits) +', triggered at ' + str(datetime.datetime.now()))
                 self.__alerted = False
 
     # loop to print summary every 10 seconds
@@ -41,7 +42,7 @@ class Sniff:
         self.alert.expire()
 
     def pkt(self, pkt):
-        if scapy_http.http.HTTPRequest in pkt:
+        if shttp.HTTPRequest in pkt:
             # get website section
             host = pkt['HTTPRequest'].Host.decode("utf-8")
             pathre = r'^((\/\w+)\/?)'
@@ -55,10 +56,11 @@ class Sniff:
 
             # TODO @stephengroat parameterize out alert value with argparse
             if host == self.alertSection:
-                if list(self.alert.values()).count(self.alertSection) > 2:
+                hits = list(self.alert.values()).count(self.alertSection)
+                if hits > self.alertSize:
                     # if not alerted, activate
                     if not self.__alerted:
-                        print('ALERT ON')
+                        print('High traffic generated an alert - hits = '+ str(hits) +', triggered at ' + str(datetime.datetime.now()))
                         self.__alerted = True
                         self.e = threading.Event()
                     # if alerted, kill existing expire thread
@@ -69,11 +71,12 @@ class Sniff:
                     expireThread = threading.Thread(target=self.expire)
                     expireThread.start()
 
-    def __init__(self, alert=None, maxcachesize=1024, cttl=10, attl=120):
+    def __init__(self, alertsection=None, alertsize=0, maxcachesize=1024, cttl=10, attl=120):
         self.__alerted = False
         self.cache = TTLCache(maxsize=maxcachesize, ttl=cttl)
         self.alert = TTLCache(maxsize=maxcachesize, ttl=attl, cb=self.alert)
-        self.alertSection = alert
+        self.alertSection = alertsection
+        self.alertSize = alertsize
 
     def __call__(self):
         # start summary thread
@@ -89,5 +92,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Sniff HTTP traffic for sections and alert')
     parser.add_argument('', metavar='N', type=int, nargs='+',
                         help='an integer for the accumulator')
-    sniffer = Sniff(alert='www.bbc.com', attl=15)
+    sniffer = Sniff(alertsection='www.bbc.com', attl=15)
     sniffer()
