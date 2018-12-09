@@ -68,7 +68,6 @@ class Sniff:
             self.cache[random.randint(0, self.cache.maxsize)] = host
             self.alert[random.randint(0, self.alert.maxsize)] = host
 
-            # TODO @stephengroat parameterize out alert value with argparse
             if host == self.alertSection:
                 hits = list(self.alert.values()).count(self.alertSection)
                 if hits > self.alertSize:
