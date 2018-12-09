@@ -20,7 +20,7 @@ import sys
 
 
 class Sniff:
-    # check if alert still valid and, if not, turn off
+    # check if alert still valid on cache removal and, if not, turn off
     def alert(self):
         if self.__alerted:
             hits = list(self.alert.values()).count(self.alertSection)
@@ -37,9 +37,13 @@ class Sniff:
         while True:
             print(datetime.datetime.now())
             if self.cache.currsize != 0:
-                print("Summary: SITE/HITS")
+                print("Summary\nSite: # of hits")
+                counter = Counter(list(self.cache.values()))
                 for site in Counter(list(self.cache.values())).most_common():
-                    print(site)
+                    print(site[0] + ": " + str(site[1]))
+                totalhits = sum(counter.values())
+                print("Total hits: " + str(totalhits) +
+                      " Hits per second: " + str(totalhits/self.cache.ttl))
             # prevent drift by taking summary runtime into account
             next_call = next_call+self.cache.ttl
             time.sleep(next_call - time.time())
@@ -54,6 +58,7 @@ class Sniff:
         if shttp.HTTPRequest in pkt:
             # get website section
             host = pkt['HTTPRequest'].Host.decode("utf-8")
+            # regex for site section
             pathre = r'^((\/\w+)\/?)'
             matches = re.match(pathre, pkt['HTTPRequest'].Path.decode("utf-8"))
             if matches:
@@ -84,6 +89,7 @@ class Sniff:
 
     def signal_handler(self, sig, frame):
         print('Exiting')
+        # kill alert thread on exit
         self.e.set()
         sys.exit(0)
 
@@ -113,7 +119,7 @@ if __name__ == '__main__':
             )
     parse.add_argument(
             '--alertsection', type=str, required=True,
-            help='website section for alert (i.e. test.com/test or test.com'
+            help='website section for alert (i.e. test.com/test or test.com)'
             )
     parse.add_argument(
             '--alertsize', type=int, required=True,
