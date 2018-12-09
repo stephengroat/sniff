@@ -14,6 +14,9 @@ import datetime
 # Counting caches
 from collections import Counter
 import argparse
+# For capturing SIGINT
+import signal
+import sys
 
 
 class Sniff:
@@ -22,7 +25,10 @@ class Sniff:
         if self.__alerted:
             hits = list(self.alert.values()).count(self.alertSection)
             if hits <= self.alertSize:
-                print('High traffic resolved an alert - hits = '+ str(hits) +', triggered at ' + str(datetime.datetime.now()))
+                print('High traffic resolved an alert - hits = ' +
+                      str(hits) +
+                      ', triggered at ' +
+                      str(datetime.datetime.now()))
                 self.__alerted = False
 
     # loop to print summary every 10 seconds
@@ -30,7 +36,10 @@ class Sniff:
         next_call = time.time()
         while True:
             print(datetime.datetime.now())
-            print(Counter(list(self.cache.values())))
+            if self.cache.currsize != 0:
+                print("Summary: SITE/HITS")
+                for site in Counter(list(self.cache.values())).most_common():
+                    print(site)
             # prevent drift by taking summary runtime into account
             next_call = next_call+self.cache.ttl
             time.sleep(next_call - time.time())
@@ -60,9 +69,11 @@ class Sniff:
                 if hits > self.alertSize:
                     # if not alerted, activate
                     if not self.__alerted:
-                        print('High traffic generated an alert - hits = '+ str(hits) +', triggered at ' + str(datetime.datetime.now()))
+                        print('High traffic generated an alert - hits = ' +
+                              str(hits) +
+                              ', triggered at ' +
+                              str(datetime.datetime.now()))
                         self.__alerted = True
-                        self.e = threading.Event()
                     # if alerted, kill existing expire thread
                     elif self.__alerted:
                         self.e.set()
@@ -71,12 +82,20 @@ class Sniff:
                     expireThread = threading.Thread(target=self.expire)
                     expireThread.start()
 
-    def __init__(self, alertsection=None, alertsize=0, maxcachesize=1024, cttl=10, attl=120):
+    def signal_handler(self, sig, frame):
+        print('Exiting')
+        self.e.set()
+        sys.exit(0)
+
+    def __init__(self, alertsection=None, alertsize=0, maxcachesize=1024,
+                 cttl=10, attl=120):
         self.__alerted = False
         self.cache = TTLCache(maxsize=maxcachesize, ttl=cttl)
         self.alert = TTLCache(maxsize=maxcachesize, ttl=attl, cb=self.alert)
         self.alertSection = alertsection
         self.alertSize = alertsize
+        self.e = threading.Event()
+        signal.signal(signal.SIGINT, self.signal_handler)
 
     def __call__(self):
         # start summary thread
@@ -89,8 +108,17 @@ class Sniff:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Sniff HTTP traffic for sections and alert')
-    parser.add_argument('', metavar='N', type=int, nargs='+',
-                        help='an integer for the accumulator')
-    sniffer = Sniff(alertsection='www.bbc.com', attl=15)
+    parse = argparse.ArgumentParser(
+            description='Sniff HTTP traffic for sections and alert'
+            )
+    parse.add_argument(
+            '--alertsection', type=str, required=True,
+            help='website section for alert (i.e. test.com/test or test.com'
+            )
+    parse.add_argument(
+            '--alertsize', type=int, required=True,
+            help='number of hits within 2 minutes to generate alert'
+            )
+    args = parse.parse_args()
+    sniffer = Sniff(alertsection=args.alertsection, alertsize=args.alertsize)
     sniffer()
