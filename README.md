@@ -39,6 +39,9 @@ sudo python3 sniff.py --alertsection=www.bbc.com --alertsize=2
 
 ## TODO
 
+- [ ] work on making application more event based
+- [ ] seperate out sniffing and alerting notification to assure sniffing thread is not interrupted
+- [ ] check interaction of Python GIL on app to assure that scapy `sniff` and other thread are not blocking each other
 - [ ] continue to improve test coverage
 - [ ] create a `setup.py` for better installation methods
 - [ ] fix python2 floating point division issue for cross compatability
