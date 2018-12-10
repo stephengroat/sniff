@@ -39,7 +39,7 @@ sudo python3 sniff.py --alertsection=www.bbc.com --alertsize=2
 
 ## TODO
 
-- [ ] 
+- [ ] continue to improve test coverage
 - [ ] create a `setup.py` for better installation methods
 - [ ] fix python2 floating point division issue for cross compatability
 - [ ] try to get https://github.com/stephengroat/cachetools/commit/0b4337076b642857cb4ecd63ffe4fe3bec53bf2c push to upstream project

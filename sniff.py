@@ -34,8 +34,9 @@ class Sniff:
     # loop to print summary every 10 seconds
     def summary(self):
         next_call = time.time()
-        while True:
-            print(datetime.datetime.now())
+        self.summary_run = threading.Event()
+        self.summary_run.set()
+        while self.summary_run.isSet():
             if self.cache.currsize != 0:
                 print("Summary\nSite: # of hits")
                 counter = Counter(list(self.cache.values()))
